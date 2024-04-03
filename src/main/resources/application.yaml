@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: oauth
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/oauth-toy-project
+    username: root
+    password: root1234!!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+
+client:
+  origins: http://localhost:3000
