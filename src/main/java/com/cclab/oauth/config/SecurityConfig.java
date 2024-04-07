@@ -1,14 +1,15 @@
 package com.cclab.oauth.config;
 
 
+import com.cclab.oauth.commom.exhandler.JwtAccessDeniedHandler;
+import com.cclab.oauth.domain.jwt.filter.JwtAuthenticationFilter;
+import com.cclab.oauth.domain.jwt.service.TokenService;
+import com.cclab.oauth.security.UserDetailsServiceImpl;
+import com.cclab.oauth.security.entrypoint.JwtAuthenticationEntryPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.Collections;
 
@@ -23,6 +25,11 @@ import java.util.Collections;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final ObjectMapper objectMapper;
+    private final UserDetailsService userDetailsService;
+    private final TokenService tokenService;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
@@ -38,6 +45,12 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(request -> {
                     request.anyRequest().permitAll();
+                })
+                .addFilterBefore(new JwtAuthenticationFilter(userDetailsService, tokenService) , UsernamePasswordAuthenticationFilter.class)
+                //.addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class)
+                .exceptionHandling(configurer -> {
+                    configurer.accessDeniedHandler(new JwtAccessDeniedHandler(objectMapper));
+                    configurer.authenticationEntryPoint(new JwtAuthenticationEntryPoint(objectMapper));
                 })
                 .build();
     }
