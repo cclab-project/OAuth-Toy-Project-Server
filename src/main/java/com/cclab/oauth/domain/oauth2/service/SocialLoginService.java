@@ -49,7 +49,9 @@ public class SocialLoginService {
         return response;
     }
 
-    public SignUpForm signIn(String providerName, String code){
+
+
+    public SignUpForm login(String providerName, String code){
         ClientRegistration provider = clientRegistrationRepository.findByRegistrationId(providerName);
 
         if (providerName.equals("kakao")) {

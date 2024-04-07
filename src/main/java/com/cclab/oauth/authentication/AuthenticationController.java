@@ -1,17 +1,13 @@
 package com.cclab.oauth.authentication;
 
 import com.cclab.oauth.domain.jwt.JwtDto;
-import com.cclab.oauth.domain.member.entity.Member;
 import com.cclab.oauth.domain.member.service.MemberService;
 import com.cclab.oauth.domain.oauth2.model.SignUpForm;
 import com.cclab.oauth.domain.oauth2.service.SocialLoginService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -32,20 +28,24 @@ public class AuthenticationController {
     }
 
     @GetMapping("/login/oauth2/code/{provider}")
-    public ResponseEntity<JwtDto> authorized(@PathVariable String provider, @RequestParam String code) {
+    public ResponseEntity<JwtDto> authorized(@PathVariable String provider, @RequestParam String code, HttpServletResponse response) {
         log.info("authorized - provider : {}, code : {}", provider, code);
         return socialLoginService.connectToSocialLogin(provider, code);
     }
 
     @PostMapping("/login/social/{provider}")
-    public ResponseEntity<JwtDto> socialSignIn(@PathVariable String provider, @RequestBody String code) {
+    public ResponseEntity<JwtDto> socialSignIn(@PathVariable String provider, @RequestBody String code, HttpServletResponse httpServletResponse) throws IOException {
         log.info("socialSignIn - provider : {}, code : {}",provider, code);
-        SignUpForm signUpForm = socialLoginService.signIn(provider, code);
+        SignUpForm signUpForm = socialLoginService.login(provider, code);
         log.info("signUpForm = {}", signUpForm);
-        Member member = memberService.signUp(signUpForm);
-        log.info("created member :{}", member.getMemberId());
+        JwtDto response = memberService.login(signUpForm);
+        httpServletResponse.sendRedirect("http://localhost:8080/input");
+        return ResponseEntity.ok(response);
+    }
 
-        return null;
+    @GetMapping("/input")
+    public void input() {
+        log.info("input");
     }
 
 }
